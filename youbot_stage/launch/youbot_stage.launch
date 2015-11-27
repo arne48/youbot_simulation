@@ -1,0 +1,110 @@
+<!--
+  Turtlebot navigation simulation:
+  - stage
+  - map_server
+  - move_base
+  - static map
+  - amcl
+  - rviz view
+ -->
+<launch>
+
+  <!-- Name of the map to use (without path nor extension) and initial position -->
+
+  <arg name="map_file"       default="$(find youbot_stage)/maps/maze.yaml"/> <!-- robopark_plan -->
+  <arg name="world_file"     default="$(find youbot_stage)/maps/stage/maze.world"/>
+  <arg name="initial_pose_x" default="2.0"/>
+  <arg name="initial_pose_y" default="2.0"/>
+  <arg name="initial_pose_a" default="0.0"/>
+
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find youbot_description)/robots/youbot.urdf.xacro'"/>
+
+  <param name="/use_sim_time" value="true"/>
+  <!--  ******************** Stage ********************  -->
+  <!--
+        Publishes transforms:
+          /base_link -> /base_laser
+          /base_footprint -> /base_link (identity)
+          /odom -> base_footprint
+        Publishes topics:
+          /odom : odometry data from the simulated odometry
+          /base_scan : laser data from the simulated laser
+          /base_pose_ground_truth : the ground truth pose
+        Parameters:
+          base_watchdog_timeout : time (s) after receiving the last command on cmd_vel before stopping the robot
+        Args:
+          -g : run in headless mode.
+  -->
+  <node pkg="stage_ros" type="stageros" name="stageros" args="$(arg world_file)">
+    <param name="base_watchdog_timeout" value="0.5"/>
+    <remap from="odom" to="odom"/>
+    <remap from="base_pose_ground_truth" to="base_pose_ground_truth"/>
+    <remap from="base_scan_0" to="base_scan"/>
+    <remap from="base_scan_1" to="base_scan_back"/>
+  </node>
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="5.0" />
+  </node>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="use_gui" value="false"/>
+  </node>
+
+    <!--  ************** Navigation  ***************  -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base_node" output="screen">
+	<remap from="scan" to="base_scan"/>
+        <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"/>
+
+        <rosparam file="$(find youbot_stage)/config/move_base_params.yaml" command="load" />
+        <rosparam file="$(find youbot_stage)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find youbot_stage)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+
+        <rosparam file="$(find youbot_stage)/config/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find youbot_stage)/config/global_costmap_params.yaml" command="load" />
+        <rosparam file="$(find youbot_stage)/config/base_local_planner_params.yaml" command="load" />
+
+        <rosparam file="$(find youbot_stage)/config/recovery_behaviours.yaml" command="load" />
+    </node>
+
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find youbot_stage)/maps/maze.yaml"/>
+
+<node pkg="amcl" type="amcl" name="amcl">
+  <remap from="scan" to="base_scan"/>
+  <param name="odom_model_type" value="omni"/>
+  <param name="odom_alpha5" value="0.2"/>
+  <param name="transform_tolerance" value="0.2" />
+  <param name="gui_publish_rate" value="1.0"/>
+  <param name="laser_max_beams" value="30"/>
+  <param name="min_particles" value="500"/>
+  <param name="max_particles" value="2000"/>
+  <param name="kld_err" value="0.05"/>
+  <param name="kld_z" value="0.99"/>
+  <param name="odom_alpha1" value="0.5"/>
+  <param name="odom_alpha2" value="0.2"/>
+  <param name="odom_alpha3" value="0.5"/>
+  <param name="odom_alpha4" value="0.5"/>
+  <param name="laser_z_hit" value="0.5"/>
+  <param name="laser_z_short" value="0.05"/>
+  <param name="laser_z_max" value="0.05"/>
+  <param name="laser_z_rand" value="0.5"/>
+  <param name="laser_sigma_hit" value="0.2"/>
+  <param name="laser_lambda_short" value="0.1"/>
+  <param name="laser_lambda_short" value="0.1"/>
+  <param name="laser_model_type" value="likelihood_field"/>
+  <param name="laser_likelihood_max_dist" value="2.0"/>
+  <param name="update_min_d" value="0.2"/>
+  <param name="update_min_a" value="0.3"/>
+  <param name="global_frame_id" value="/map"/>
+  <param name="base_frame_id" value="/base_link"/>
+  <param name="odom_frame_id" value="odom"/>
+  <param name="resample_interval" value="1"/>
+  <param name="transform_tolerance" value="0.2"/>
+  <param name="recovery_alpha_slow" value="0.0"/>
+  <param name="recovery_alpha_fast" value="0.0"/>
+</node>
+
+
+  <!--  **************** Visualisation ****************  -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find youbot_stage)/rviz/youbot_stage.rviz"/>
+</launch>

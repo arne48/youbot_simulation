@@ -1,5 +1,5 @@
 arm_controller:
-  type: effort_controllers/JointTrajectoryController
+  type: position_controllers/JointTrajectoryController
   joints:
     - arm_joint_1
     - arm_joint_2
@@ -26,10 +26,16 @@ arm_controller:
       goal: 0.1
 
 gripper_controller:
-  type: effort_controllers/JointTrajectoryController
+  type: position_controllers/JointTrajectoryController
   joints:
     - gripper_finger_joint_l
     - gripper_finger_joint_r
   gains:
     gripper_finger_joint_l: {p: 1000.0, d: 1.0}
     gripper_finger_joint_r: {p: 1000.0, d: 1.0}
+  constraints:
+    goal_time: 0.8
+    gripper_finger_joint_l:
+      goal: 0.8
+    gripper_finger_joint_r:
+      goal: 0.8

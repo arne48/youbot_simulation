@@ -1,0 +1,21 @@
+#swarmlabs (without arm)
+footprint: [[0.29, 0.1875],
+            [0.29, 0.065],
+            [0.358, 0.065],
+            [0.358, -0.065],
+            [0.29, -0.065],
+            [0.29, -0.1875],
+            [-0.29, -0.1875],
+            [-0.29, -0.065],
+            [-0.358, -0.065],
+            [-0.358, 0.065],
+            [-0.29, 0.065],
+            [-0.29, 0.1875]]
+
+controller_frequency: 9.0
+controller_patience: 15.0
+clearing_radius: 0.6 #0.25
+footprint_padding: 0.01
+clearing_rotation_allowed: true
+recovery_behavior_enabled: true
+
