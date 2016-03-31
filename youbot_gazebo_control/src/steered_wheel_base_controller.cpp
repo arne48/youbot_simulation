@@ -198,12 +198,16 @@ namespace
 {
 
 void addClaimedResources(hardware_interface::HardwareInterface *const hw_iface,
-                         set<string>& claimed_resources)
+                         controller_interface::ControllerBase::ClaimedResources& claimed_resources)
 {
     if (hw_iface == NULL)
         return;
+
     const set<string> claims = hw_iface->getClaims();
-    claimed_resources.insert(claims.begin(), claims.end());
+    for(controller_interface::ControllerBase::ClaimedResources::iterator it = claimed_resources.begin(); it!=claimed_resources.end(); ++it){
+      it->resources.insert(claims.begin(), claims.end());
+    }
+
     hw_iface->clearClaims();
 }
 
@@ -697,7 +701,7 @@ public:
     // These are not real-time safe.
     virtual bool initRequest(RobotHW *const robot_hw,
                              NodeHandle& root_nh, NodeHandle& ctrlr_nh,
-                             set<string>& claimed_resources);
+                             controller_interface::ControllerBase::ClaimedResources& claimed_resources);
     virtual string getHardwareInterfaceType() const;
 
     // These are real-time safe.
@@ -841,7 +845,7 @@ SteeredWheelBaseController::SteeredWheelBaseController()
 bool SteeredWheelBaseController::initRequest(RobotHW *const robot_hw,
         NodeHandle& /* root_nh */,
         NodeHandle& ctrlr_nh,
-        set<string>& claimed_resources)
+        controller_interface::ControllerBase::ClaimedResources& claimed_resources)
 {
     if (state_ != CONSTRUCTED)
     {
